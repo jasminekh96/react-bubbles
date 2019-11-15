@@ -11,7 +11,11 @@ const ColorList = ({ colors, updateColors }) => {
 	console.log(colors);
 	const [ editing, setEditing ] = useState(false);
 	const [ colorToEdit, setColorToEdit ] = useState(initialColor);
-
+	const [ addColor, setAddColor ] = useState({
+		code  : { hex: '' },
+		color : '',
+		id    : Date.now(),
+	});
 	const editColor = (color) => {
 		setEditing(true);
 		setColorToEdit(color);
@@ -36,6 +40,20 @@ const ColorList = ({ colors, updateColors }) => {
 			.delete(`/api/colors/${color.id}`)
 			.then((res) => updateColors(colors.filter((color) => color.id !== res.data)))
 			.catch((err) => console.log(err));
+	};
+
+	const addColorSubmit = (e) => {
+		e.preventDefault();
+		axiosWithAuth().post('/api/colors', addColor).then(() => {
+			axiosWithAuth().get('/api/colors').then((res) => updateColors(res.data)).catch((err) => console.log(err));
+		});
+	};
+	const createOnChange = (e) => {
+		e.preventDefault();
+		setAddColor({
+			...addColor,
+			[e.target.name]: e.target.value,
+		});
 	};
 
 	return (
@@ -87,6 +105,17 @@ const ColorList = ({ colors, updateColors }) => {
 				</form>
 			)}
 			<div className='spacer' />
+			<form onSubmit={addColorSubmit}>
+				<input type='text' name='color' value={addColor.color} onChange={createOnChange} placeholder='Color Name' />
+				<input
+					type='text'
+					name='code'
+					value={addColor.code.hex}
+					onChange={(e) => setAddColor({ ...colorToEdit, code: { hex: e.target.value } })}
+					placeholder='Hex Code'
+				/>
+				<button>Add Color</button>
+			</form>
 			{/* stretch - build another form here to add a color */}
 		</div>
 	);
